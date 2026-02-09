@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reverse Shell Web Interface</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #1e1e1e; color: white; }
+        #output { background: black; padding: 10px; height: 400px; overflow-y: auto; }
+        #input { width: 80%; padding: 10px; margin-top: 10px; }
+        #send { padding: 10px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h2>🔐 Reverse Shell Web Interface</h2>
+    <div id="output"></div>
+    <input type="text" id="input" placeholder="Enter command...">
+    <button id="send">Send</button>
+    
+    <script>
+        const output = document.getElementById('output');
+        const input = document.getElementById('input');
+        const sendBtn = document.getElementById('send');
+        
+        // WebSocket connection
+        const ws = new WebSocket(`wss://${window.location.host}`);
+        
+        ws.onopen = () => {
+            addOutput('✅ Connected to server');
+        };
+        
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            addOutput(data.output || data.message);
+        };
+        
+        ws.onerror = (error) => {
+            addOutput('❌ Connection error');
+        };
+        
+        function addOutput(text) {
+            output.innerHTML += text + '<br>';
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function sendCommand() {
+            const cmd = input.value.trim();
+            if (cmd) {
+                ws.send(JSON.stringify({ command: cmd }));
+                input.value = '';
+            }
+        }
+        
+        sendBtn.onclick = sendCommand;
+        input.onkeypress = (e) => {
+            if (e.key === 'Enter') sendCommand();
+        };
+    </script>
+</body>
+</html>
